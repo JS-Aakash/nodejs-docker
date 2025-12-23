@@ -72,17 +72,16 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      # DEPLOY TO EC2 using SSM Run Command (Secure, No SSH keys needed)
-      - name: Update EC2 Service via SSM
-        run: |
-          aws ssm send-command \
-            --document-name "AWS-RunShellScript" \
-            --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
-            --parameters 'commands=[
-              "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
-              "docker pull ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPO }}:latest",
-              "docker stop ec2-worker || true",
-              "docker rm ec2-worker || true",
-              "docker run -d --name ec2-worker --restart unless-stopped -p 3000:3000 -e GROQ_API_KEY=${{ secrets.GROQ_API_KEY }} ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPO }}:latest"
-            ]' \
-            --comment "Rolling update of EC2 Worker"
+      # DEPLOY TO EC2 using SSH (Fallback since SSM is not connecting)
+      - name: Update EC2 Service via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu  # Assuming Ubuntu, change to 'ec2-user' if Amazon Linux
+          key: ${{ secrets.SSH_PRIVATE_KEY_EC2 }}
+          script: |
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+            docker pull ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPO }}:latest
+            docker stop ec2-worker || true
+            docker rm ec2-worker || true
+            docker run -d --name ec2-worker --restart unless-stopped -p 3000:3000 -e GROQ_API_KEY=${{ secrets.GROQ_API_KEY }} ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPO }}:latest
