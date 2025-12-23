@@ -1,0 +1,105 @@
+service: ai-doc-intelligence
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  memorySize: 256
+  timeout: 30
+  environment:
+    DOCUMENTS_BUCKET: ${self:service}-documents-${sls:stage}
+    EC2_API_URL: ${param:EC2_API_URL, 'http://localhost:3000'} # Default to localhost, override in deployment
+
+  iam:
+    role:
+      statements:
+        # ALLOW Logging to CloudWatch (Required for Observability)
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - 'arn:aws:logs:${self:provider.region}:*:log-group:/aws/lambda/${self:service}-${self:provider.stage}*:*'
+
+        # ALLOW S3 Access (Strictly scoped to project bucket)
+        # PutObject needed for Pre-signed URL generation and internal ops
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+          Resource:
+            - arn:aws:s3:::${self:provider.environment.DOCUMENTS_BUCKET}/*
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+package:
+  individually: true
+  patterns:
+    - src/static/**
+
+functions:
+  app:
+    handler: src/handlers/home.handler
+    events:
+      - httpApi:
+          path: /
+          method: get
+
+  healthCheck:
+    handler: src/handlers/health.handler
+    events:
+      - httpApi:
+          path: /health
+          method: get
+
+  getUploadUrl:
+    handler: src/handlers/upload.handler
+    events:
+      - httpApi:
+          path: /upload
+          method: post
+
+  triggerProcessing:
+    handler: src/handlers/triggerEC2.handler
+    events:
+      - s3:
+          bucket: ${self:provider.environment.DOCUMENTS_BUCKET}
+          event: s3:ObjectCreated:*
+          existing: true
+
+
+  chatProxy:
+    handler: src/handlers/chatProxy.handler
+    events:
+      - httpApi:
+          path: /query
+          method: post
+    timeout: 30 # Ensure Lambda waits long enough for the EC2 worker (LLM calls can be slow)
+
+
+resources:
+  Resources:
+    DocumentsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.DOCUMENTS_BUCKET}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders: ['*']
+              AllowedMethods: [PUT]
+              AllowedOrigins: ['*']
+              MaxAge: 3000
+
+custom:
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: true
+    exclude: ['aws-sdk']
+    target: 'node20'
+    platform: 'node'
+    concurrency: 10

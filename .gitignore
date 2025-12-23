@@ -1,0 +1,8 @@
+node_modules/
+.serverless/
+.build/
+.esbuild/
+dist/
+*.log
+.env
+.DS_Store

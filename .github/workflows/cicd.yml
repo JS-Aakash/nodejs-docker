@@ -1,4 +1,4 @@
-name: CI CD Pipeline
+name: Hybrid Deployment Pipeline
 
 on:
   push:
@@ -7,9 +7,40 @@ on:
   workflow_dispatch:
 
 jobs:
-  docker-build-push:
+  # ------------------------------------------------------------------
+  # JOB 1: Deploy Serverless Infrastructure (Lambdas, S3, API Gateway)
+  # ------------------------------------------------------------------
+  deploy-serverless:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy Serverless Stack
+        run: npx serverless deploy --stage prod --param="EC2_API_URL=${{ secrets.EC2_API_URL }}"
+
+  # ------------------------------------------------------------------
+  # JOB 2: Build & Deploy EC2 Worker (Docker -> ECR -> EC2 via SSM)
+  # ------------------------------------------------------------------
+  deploy-worker:
+    runs-on: ubuntu-latest
+    needs: deploy-serverless # Run after serverless to ensure env vars/resources exist
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,26 +53,31 @@ jobs:
           aws-region: us-east-1
 
       - name: Log in to Amazon ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build Docker image
+      # BUILD & PUSH from 'worker/' directory
+      - name: Build, tag, and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPO }} # Repository Name
+          IMAGE_TAG: latest
         run: |
-          docker build -t ${{ secrets.ECR_REPO }}:latest .
+          cd worker
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: Push Docker image to Amazon ECR
+      # DEPLOY TO EC2 using SSM Run Command (Secure, No SSH keys needed)
+      - name: Update EC2 Service via SSM
         run: |
-          docker push ${{ secrets.ECR_REPO }}:latest
-
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Deploy via SSH to EC2
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY_EC2 }}
-          script: |
-            docker compose pull
-            docker compose up -d --force-recreate
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+            --parameters 'commands=[
+              "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
+              "docker pull ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPO }}:latest",
+              "docker stop ec2-worker || true",
+              "docker rm ec2-worker || true",
+              "docker run -d --name ec2-worker --restart unless-stopped -p 3000:3000 -e GROQ_API_KEY=${{ secrets.GROQ_API_KEY }} ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPO }}:latest"
+            ]' \
+            --comment "Rolling update of EC2 Worker"
