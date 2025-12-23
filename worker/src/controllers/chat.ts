@@ -16,7 +16,7 @@ export const chatHandler = async (req: Request, res: Response) => {
         console.log(`Processing chat for docs: ${targetIds.length} target(s)`);
 
         // 1. Retrieve relevant chunks with filtering
-        const relevantDocs = await vectorStore.similaritySearch(question, 25, targetIds.length > 0 ? targetIds : undefined);
+        const relevantDocs = await vectorStore.similaritySearch(question, 12, targetIds.length > 0 ? targetIds : undefined);
         const context = relevantDocs.map((d: any) => d.pageContent).join('\n\n');
 
         // 2. Generate Answer

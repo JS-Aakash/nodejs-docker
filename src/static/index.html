@@ -445,24 +445,36 @@
         }
 
         @media (max-width: 768px) {
+
+            html,
+            body {
+                height: 100%;
+                width: 100%;
+                position: fixed;
+                overflow: hidden;
+            }
+
             .mobile-header {
                 display: flex;
+                flex-shrink: 0;
             }
 
             .app-layout {
-                height: calc(100vh - 60px);
+                height: calc(100% - 60px);
+                width: 100%;
+                overflow: hidden;
             }
 
             .sidebar {
-                position: absolute;
-                top: 0;
+                position: fixed;
+                top: 60px;
                 left: 0;
                 bottom: 0;
                 transform: translateX(-100%);
-                /* Hidden by default */
                 width: 85%;
-                /* Mostly cover screen */
+                max-width: 320px;
                 box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+                overflow-y: auto;
             }
 
             .sidebar.open {
@@ -470,8 +482,8 @@
             }
 
             .overlay {
-                position: absolute;
-                top: 0;
+                position: fixed;
+                top: 60px;
                 left: 0;
                 right: 0;
                 bottom: 0;
@@ -485,12 +497,31 @@
                 display: block;
             }
 
+            .chat-main {
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
             .chat-scroll-area {
                 padding: 1rem;
+                padding-bottom: 0.5rem;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
 
             .input-container {
-                padding: 1rem;
+                padding: 0.75rem 1rem;
+                padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+                flex-shrink: 0;
+            }
+
+            .message-row {
+                max-width: 100%;
+            }
+
+            .input-wrapper {
+                max-width: 100%;
             }
         }
 
