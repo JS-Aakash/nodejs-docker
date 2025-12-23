@@ -4,7 +4,9 @@ import { vectorStore } from '../services/vectorStore.js';
 import { processPdf } from '../services/pdfProcessor.js';
 import { Readable } from 'stream';
 
-const s3 = new S3Client({});
+const s3 = new S3Client({
+    region: process.env.AWS_REGION || 'us-east-1'
+});
 
 const streamToBuffer = async (stream: Readable): Promise<Buffer> => {
     return new Promise((resolve, reject) => {
