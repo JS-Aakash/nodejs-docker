@@ -23,7 +23,7 @@ export const generateAnswer = async (question: string, context: string): Promise
                 content: question
             }
         ],
-        model: "llama3-8b-8192", // Use a free/fast model
+        model: "llama-3.1-8b-instant", // Use a fresh, supported model
         temperature: 0.2,
         max_tokens: 500
     });
