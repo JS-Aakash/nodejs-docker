@@ -3,330 +3,393 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ContextAI | Secure Document Intelligence</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ContextAI | Deep Research</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
-            /* Palette: ContextAI Premium Dark */
-            --bg-deep: #020617;
-            /* Slate 950 roughly */
-            --bg-panel: #0f172a;
-            /* Slate 900 */
-            --bg-surface: #1e293b;
-            /* Slate 800 */
+            /* Notebook Aesthetic */
+            --bg-body: #09090b;
+            --bg-sidebar: #18181b;
+            --bg-chat: #09090b;
+            --bg-card: #27272a;
 
-            --accent-primary: #6366f1;
-            /* Indigo 500 */
-            --accent-glow: rgba(99, 102, 241, 0.4);
-            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --border-color: #3f3f46;
 
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --border: #334155;
+            --accent: #8b5cf6;
+            /* Violet */
+            --accent-hover: #7c3aed;
+            --text-main: #e4e4e7;
+            --text-muted: #a1a1aa;
 
-            --radius-lg: 24px;
-            --radius-md: 16px;
-            --radius-sm: 8px;
+            --header-height: 60px;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: var(--bg-deep);
-            color: var(--text-primary);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
             height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            background-image:
-                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.08) 0%, transparent 25%);
-        }
-
-        .layout {
-            width: 95%;
-            /* Wider layout */
-            max-width: 1400px;
-            height: 90vh;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            /* Safari support */
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: var(--radius-lg);
-            display: grid;
-            grid-template-columns: 320px 1fr;
+            flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 40px 60px -12px rgba(0, 0, 0, 0.6);
         }
 
-        /* --- Sidebar & Upload --- */
+        /* --- Mobile Header --- */
+        .mobile-header {
+            height: var(--header-height);
+            display: none;
+            /* Hidden on desktop */
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+            background: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 50;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .menu-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        /* --- Layout --- */
+        .app-layout {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - var(--header-height));
+            /* Adjusted height */
+            position: relative;
+        }
+
+        /* --- Sidebar --- */
         .sidebar {
-            background: var(--bg-panel);
-            padding: 2rem;
-            border-right: 1px solid var(--border);
+            width: 320px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            gap: 2rem;
+            transition: transform 0.3s ease;
+            z-index: 40;
         }
 
-        .brand {
+        .sidebar-header {
+            padding: 1.5rem;
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 1.5rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            color: white;
+            gap: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .brand span {
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .logo-icon {
+        .logo-box {
             width: 32px;
             height: 32px;
-            background: var(--accent-gradient);
+            background: var(--accent);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-weight: bold;
             color: white;
-            box-shadow: 0 0 20px var(--accent-glow);
         }
 
-        .upload-card {
-            background: rgba(30, 41, 59, 0.5);
-            border: 2px dashed var(--border);
-            border-radius: var(--radius-md);
-            padding: 2rem;
-            text-align: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
+        .app-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: -0.5px;
         }
 
-        .upload-card:hover {
-            border-color: var(--accent-primary);
-            background: rgba(99, 102, 241, 0.05);
-            transform: translateY(-2px);
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
-        .upload-icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            opacity: 0.8;
-            transition: transform 0.3s ease;
-        }
-
-        .upload-card:hover .upload-icon {
-            transform: scale(1.1);
-        }
-
-        .upload-text-main {
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-            font-size: 0.95rem;
-        }
-
-        .upload-text-sub {
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-        }
-
-        .file-list-header {
+        .section-label {
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 0.5rem;
         }
 
-        .status-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            overflow-y: auto;
+        /* Upload Area */
+        .upload-area {
+            border: 1px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.02);
         }
 
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        /* Doc Item */
         .doc-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            transition: all 0.2s;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .doc-item:hover {
+            background: var(--bg-card);
         }
 
         .doc-item.active {
-            border-color: var(--accent-primary);
-            background: rgba(99, 102, 241, 0.1);
+            background: rgba(139, 92, 246, 0.1);
+            border-color: rgba(139, 92, 246, 0.3);
         }
 
-        .doc-icon {
-            font-size: 1.2rem;
-        }
-
-        .doc-info {
-            flex: 1;
-            overflow: hidden;
+        .doc-item.inactive {
+            opacity: 0.5;
         }
 
         .doc-name {
             font-size: 0.9rem;
-            font-weight: 500;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-
-        .doc-status {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #22c55e;
-            box-shadow: 0 0 8px #22c55e;
-        }
-
-        /* --- Chat Area --- */
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .chat-header {
-            padding: 1.5rem 2rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(15, 23, 42, 0.8);
-        }
-
-        .chat-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .chat-subtitle {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
-        .chat-messages {
             flex: 1;
-            padding: 2rem;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            scroll-behavior: smooth;
         }
 
-        .message {
-            display: flex;
-            gap: 16px;
-            max-width: 85%;
-            opacity: 0;
-            animation: slideIn 0.4s ease forwards;
-        }
-
-        .message.user {
-            align-self: flex-end;
-            flex-direction: row-reverse;
-        }
-
-        .message.ai {
-            align-self: flex-start;
-        }
-
-        .avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
+        /* Checkbox style toggle */
+        .doc-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--text-muted);
+            border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
-            flex-shrink: 0;
+            transition: all 0.2s;
         }
 
-        .avatar.ai {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            color: #a855f7;
+        .doc-item.active .doc-checkbox {
+            background: var(--accent);
+            border-color: var(--accent);
         }
 
-        .avatar.user {
-            background: var(--accent-gradient);
+        .doc-checkbox::after {
+            content: '✓';
+            font-size: 12px;
             color: white;
-            box-shadow: 0 4px 12px var(--accent-glow);
+            display: none;
         }
 
-        .bubble {
+        .doc-item.active .doc-checkbox::after {
+            display: block;
+        }
+
+
+        /* --- Main Chat --- */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-chat);
+            position: relative;
+            height: 100%;
+        }
+
+        .chat-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            scroll-behavior: smooth;
+        }
+
+        .empty-state {
+            margin: auto;
+            text-align: center;
+            max-width: 500px;
+            color: var(--text-muted);
+        }
+
+        /* Message Styles */
+        .message-row {
+            display: flex;
+            gap: 1rem;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message-row.user {
+            justify-content: flex-end;
+        }
+
+        .msg-content {
             padding: 1rem 1.5rem;
-            border-radius: 18px;
-            font-size: 0.95rem;
+            border-radius: 12px;
             line-height: 1.6;
+            font-size: 0.95rem;
             position: relative;
         }
 
-        .message.ai .bubble {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-top-left-radius: 4px;
+        /* User Message */
+        .message-row.user .msg-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-bottom-right-radius: 2px;
+            color: white;
         }
 
-        .message.user .bubble {
-            background: var(--accent-gradient);
+        /* AI Message (Notebook style) */
+        .message-row.ai .msg-content {
+            background: transparent;
+            padding: 0;
+            /* Let markdown take overs */
+            width: 100%;
+        }
+
+        /* --- Markdown Content Styling (Crucial for Structure) --- */
+        .markdown-body {
+            color: var(--text-main);
+        }
+
+        .markdown-body h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
             color: white;
-            border-top-right-radius: 4px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .markdown-body h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #d4d4d8;
+        }
+
+        .markdown-body p {
+            margin-bottom: 1rem;
+            line-height: 1.7;
+        }
+
+        .markdown-body ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .markdown-body li {
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-body strong {
+            color: #f4f4f5;
+            font-weight: 600;
+        }
+
+        .markdown-body blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 1rem;
+            margin: 1.5rem 0;
+            color: #a1a1aa;
+            font-style: italic;
+            background: rgba(139, 92, 246, 0.05);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .markdown-body code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+        }
+
+        .markdown-body pre {
+            background: #18181b;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            background: none;
+            padding: 0;
+            color: #e4e4e7;
+        }
+
+        .markdown-body hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 2rem 0;
+        }
+
+        /* --- Input Area --- */
+        .input-container {
+            padding: 1.5rem 2rem;
+            background: var(--bg-chat);
+            /* Solid background to cover scroll */
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
         }
 
         .input-wrapper {
-            padding: 2rem;
-            background: linear-gradient(to top, var(--bg-deep) 0%, transparent 100%);
-        }
-
-        .input-box {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 8px;
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
             display: flex;
             align-items: flex-end;
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-            transition: border-color 0.2s;
+            padding: 8px;
+            transition: 0.2s;
         }
 
-        .input-box:focus-within {
-            border-color: var(--accent-primary);
+        .input-wrapper:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
         }
 
         textarea {
@@ -334,53 +397,107 @@
             background: transparent;
             border: none;
             color: white;
-            padding: 14px 16px;
-            resize: none;
-            height: 56px;
-            /* Start height */
-            max-height: 150px;
+            padding: 12px;
             font-size: 1rem;
+            resize: none;
+            max-height: 200px;
+            min-height: 52px;
             outline: none;
         }
 
-        textarea::placeholder {
-            color: var(--text-secondary);
-        }
-
         .send-btn {
-            width: 48px;
-            height: 48px;
-            background: var(--accent-gradient);
-            border: none;
-            border-radius: 14px;
+            background: var(--accent);
             color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            margin-bottom: 6px;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 2px;
+            transition: 0.2s;
         }
 
         .send-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 15px var(--accent-glow);
+            background: var(--accent-hover);
         }
 
-        .send-btn:active {
-            transform: scale(0.95);
+        .send-btn:disabled {
+            background: var(--border-color);
+            cursor: default;
         }
 
-        .send-btn svg {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
+        /* --- Responsive Logic --- */
+        @media (min-width: 769px) {
+            .app-layout {
+                height: 100vh;
+            }
+
+            /* Full height on desktop */
+            .sidebar {
+                transform: translateX(0) !important;
+                position: relative;
+            }
+
+            /* Always visible */
         }
 
-        @keyframes slideIn {
+        @media (max-width: 768px) {
+            .mobile-header {
+                display: flex;
+            }
+
+            .app-layout {
+                height: calc(100vh - 60px);
+            }
+
+            .sidebar {
+                position: absolute;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+                /* Hidden by default */
+                width: 85%;
+                /* Mostly cover screen */
+                box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(4px);
+                z-index: 30;
+                display: none;
+            }
+
+            .overlay.open {
+                display: block;
+            }
+
+            .chat-scroll-area {
+                padding: 1rem;
+            }
+
+            .input-container {
+                padding: 1rem;
+            }
+        }
+
+        @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(15px);
+                transform: translateY(10px);
             }
 
             to {
@@ -388,128 +505,71 @@
                 transform: translateY(0);
             }
         }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-secondary);
-        }
-
-        .typing-indicator {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-left: 60px;
-            margin-bottom: 10px;
-            display: none;
-        }
-
-        .typing-indicator span {
-            animation: blink 1.4s infinite both;
-        }
-
-        .typing-indicator span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-indicator span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes blink {
-            0% {
-                opacity: 0.2;
-            }
-
-            20% {
-                opacity: 1;
-            }
-
-            100% {
-                opacity: 0.2;
-            }
-        }
-
-        @media (max-width: 900px) {
-            .layout {
-                grid-template-columns: 1fr;
-                border-radius: 0;
-                width: 100%;
-                height: 100%;
-            }
-
-            .sidebar {
-                display: none;
-            }
-
-            /* Hide sidebar on mobile for now */
-        }
     </style>
 </head>
 
 <body>
 
-    <div class="layout">
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <div style="display: flex; align-items: center; gap: 10px; font-weight: 700;">
+            <div
+                style="width: 24px; height: 24px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+                C</div>
+            ContextAI
+        </div>
+        <button class="menu-btn" onclick="toggleSidebar()">
+            <!-- Hamburger Icon -->
+            <svg viewBox="0 0 24 24">
+                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+            </svg>
+        </button>
+    </header>
+
+    <div class="app-layout">
+        <!-- Overlay for mobile sidebar -->
+        <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="brand">
-                <div class="logo-icon">C</div>
-                <div>Context<span>AI</span></div>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-box">C</div>
+                <div class="app-name">ContextAI</div>
             </div>
 
-            <div class="upload-card" id="dropZone">
-                <input type="file" id="fileInput" hidden accept="application/pdf">
-                <div class="upload-icon">📄</div>
-                <div class="upload-text-main">Drop PDF here</div>
-                <div class="upload-text-sub">or click to browse</div>
-            </div>
+            <div class="sidebar-content">
+                <div class="section-label">Sources</div>
 
-            <div>
-                <div class="file-list-header">Your Documents</div>
-                <div class="status-list" id="docList">
-                    <!-- Javascript will populate this -->
+                <div class="upload-area" id="dropZone">
+                    <input type="file" id="fileInput" hidden accept="application/pdf">
+                    <div style="font-size: 24px; margin-bottom: 8px;">+</div>
+                    <div style="font-size: 0.9rem; font-weight: 500;">Add Source</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">PDF only (Max 10MB)
+                    </div>
+                </div>
+
+                <div id="sourcesList" style="display: flex; flex-direction: column; gap: 8px; margin-top: 1rem;">
+                    <!-- items go here -->
                 </div>
             </div>
         </aside>
 
-        <!-- Chat Area -->
-        <main class="chat-container">
-            <div class="chat-header">
-                <div>
-                    <div class="chat-title">Document Q&A</div>
-                    <div class="chat-subtitle">AI-powered analysis secured by AWS</div>
+        <!-- Main Chat -->
+        <main class="chat-main">
+            <div class="chat-scroll-area" id="chatBox">
+                <div class="empty-state">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">✨</div>
+                    <h2 style="margin-bottom: 0.5rem; color: white;">Unlock Deep Knowledge</h2>
+                    <p>Upload documents from the sidebar to create your personalized knowledge base. <br>Then ask
+                        detailed questions to get structured, research-grade answers.</p>
                 </div>
             </div>
 
-            <div class="chat-messages" id="chatBox">
-                <div class="message ai">
-                    <div class="avatar ai">✨</div>
-                    <div class="bubble">
-                        Welcome to <strong>ContextAI</strong>. Upload a secure PDF document to the left to get
-                        started.<br><br>
-                        I can analyze contracts, reports, and papers instantly.
-                    </div>
-                </div>
-            </div>
-
-            <div class="typing-indicator" id="typing">Thinking<span>.</span><span>.</span><span>.</span></div>
-
-            <div class="input-wrapper">
-                <div class="input-box">
-                    <textarea id="questionInput" placeholder="Ask a question about the document..."></textarea>
-                    <button class="send-btn" onclick="sendQuery()">
-                        <svg viewBox="0 0 24 24">
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea id="questionInput" placeholder="Ask a detailed question..."></textarea>
+                    <button class="send-btn" id="sendBtn" onclick="sendQuery()">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
                             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
                         </svg>
                     </button>
@@ -519,46 +579,37 @@
     </div>
 
     <script>
-        let currentDocumentId = null;
+        let sources = []; // { id, name, active, key }
 
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
+        const sourcesList = document.getElementById('sourcesList');
         const chatBox = document.getElementById('chatBox');
         const questionInput = document.getElementById('questionInput');
-        const typingIndicator = document.getElementById('typing');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // --- Mobile Toggle ---
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
 
         // --- Upload Handlers ---
         dropZone.addEventListener('click', () => fileInput.click());
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent-primary)'; });
-        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--border)'; });
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.style.borderColor = 'var(--border)';
-            if (e.dataTransfer.files.length) handleUpload(e.dataTransfer.files[0]);
-        });
 
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length) handleUpload(e.target.files[0]);
-        });
-
-        async function handleUpload(file) {
+        fileInput.addEventListener('change', async (e) => {
+            if (!e.target.files.length) return;
+            const file = e.target.files[0];
             if (file.type !== 'application/pdf') return alert('Only PDFs are supported.');
 
-            // Add optimistic UI item
-            const list = document.getElementById('docList');
+            // Optimistic UI
             const tempId = Date.now();
-            list.innerHTML += `
-            <div class="doc-item active" id="doc-${tempId}">
-                <div class="doc-icon">📑</div>
-                <div class="doc-info">
-                    <div class="doc-name">${file.name}</div>
-                    <div class="doc-status"><span class="status-dot" style="background:yellow; box-shadow:none;"></span> Uploading...</div>
-                </div>
-            </div>
-        `;
+            renderSourceItem({ id: tempId, name: file.name, active: false, loading: true });
 
             try {
-                // Get URL
+                // 1. Get URL
                 const urlRes = await fetch('/upload', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -566,69 +617,117 @@
                 });
                 const { uploadUrl, fileKey } = await urlRes.json();
 
-                // Upload to S3
+                // 2. Upload S3
                 await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
 
-                // Update UI
-                currentDocumentId = fileKey;
-                const docEl = document.getElementById(`doc-${tempId}`);
-                docEl.querySelector('.doc-status').innerHTML = `<span class="status-dot"></span> Active`;
-
-                addMessage('ai', `Analysis complete for <strong>${file.name}</strong>. What would you like to know?`);
+                // 3. Success
+                removeSource(tempId);
+                addSource(fileKey, file.name);
 
             } catch (err) {
                 console.error(err);
-                alert('Upload failed: ' + err.message);
-                document.getElementById(`doc-${tempId}`).remove();
+                alert('Upload failed.');
+                removeSource(tempId);
             }
+        });
+
+        function addSource(key, name) {
+            sources.push({ id: key, name, active: true, key });
+            renderAllSources();
         }
 
-        // --- Chat Handlers ---
+        function removeSource(id) {
+            sources = sources.filter(s => s.id !== id);
+            renderAllSources();
+        }
+
+        function toggleSource(id) {
+            const s = sources.find(s => s.id === id);
+            if (s) s.active = !s.active;
+            renderAllSources();
+        }
+
+        function renderAllSources() {
+            sourcesList.innerHTML = '';
+            sources.forEach(renderSourceItem);
+        }
+
+        function renderSourceItem(s) {
+            const div = document.createElement('div');
+            div.className = `doc-item ${s.active ? 'active' : 'inactive'}`;
+            div.onclick = () => !s.loading && toggleSource(s.id);
+
+            div.innerHTML = `
+            <div class="doc-checkbox">${s.loading ? '⏳' : ''}</div>
+            <div class="doc-name">${s.name}</div>
+        `;
+            sourcesList.appendChild(div);
+        }
+
+        // --- Chat Logic ---
         async function sendQuery() {
             const text = questionInput.value.trim();
             if (!text) return;
-            if (!currentDocumentId) return alert('Please upload a document first.');
 
-            addMessage('user', text);
+            const activeIds = sources.filter(s => s.active).map(s => s.key);
+            if (activeIds.length === 0) return alert('Select at least one source.');
+
+            // Add User Message
+            appendMessage('user', text);
             questionInput.value = '';
-            typingIndicator.style.display = 'block';
-            chatBox.scrollTop = chatBox.scrollHeight;
+            questionInput.style.height = '52px';
+            sendBtn.disabled = true;
+
+            // Add AI Placeholder
+            const loadingId = appendMessage('ai', 'Thinking and analyzing sources...');
 
             try {
                 const res = await fetch('/query', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ documentId: currentDocumentId, question: text })
+                    body: JSON.stringify({ documentIds: activeIds, question: text })
                 });
                 const data = await res.json();
 
-                typingIndicator.style.display = 'none';
-                addMessage('ai', data.answer || "I couldn't generate an answer.");
+                // Replace loading message with real Markdown content
+                const contentDiv = document.getElementById(loadingId);
+                contentDiv.innerHTML = marked.parse(data.answer || "No answer generated.");
+
+                // Re-highlight code blocks if using highlight.js (optional, skip for now)
 
             } catch (err) {
-                typingIndicator.style.display = 'none';
-                addMessage('ai', "Error connecting to AI service.");
+                document.getElementById(loadingId).innerText = "Error encountered. Please try again.";
+            } finally {
+                sendBtn.disabled = false;
             }
         }
 
-        function addMessage(role, html) {
-            const div = document.createElement('div');
-            div.className = `message ${role}`;
+        function appendMessage(role, text) {
+            const id = 'msg-' + Date.now();
+            const row = document.createElement('div');
+            row.className = `message-row ${role}`;
 
-            const avatar = role === 'ai' ? '<div class="avatar ai">✨</div>' : '<div class="avatar user">👤</div>';
-            const bubble = `<div class="bubble">${html}</div>`;
+            const content = document.createElement('div');
+            content.className = 'msg-content markdown-body'; // Apply markdown styles
+            content.id = id;
 
-            div.innerHTML = role === 'ai' ? avatar + bubble : bubble + avatar;
+            if (role === 'user') {
+                content.innerText = text;
+            } else {
+                content.innerText = text; // Initial text (loading), replaced later
+            }
 
-            chatBox.appendChild(div);
+            row.appendChild(content);
+            chatBox.appendChild(row);
             chatBox.scrollTop = chatBox.scrollHeight;
+
+            return id;
         }
 
-        // Auto-resize textarea
+        // Auto-resize
         questionInput.addEventListener('input', function () {
             this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-            if (this.value === '') this.style.height = '56px';
+            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
         });
 
         questionInput.addEventListener('keydown', (e) => {
@@ -639,7 +738,6 @@
         });
 
     </script>
-
 </body>
 
 </html>

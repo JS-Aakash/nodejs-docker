@@ -8,7 +8,7 @@ export const processPdf = async (buffer: Buffer) => {
 
     // Chunking
     const splitter = new RecursiveCharacterTextSplitter({
-        chunkSize: 1000,
+        chunkSize: 1200,
         chunkOverlap: 200,
     });
 

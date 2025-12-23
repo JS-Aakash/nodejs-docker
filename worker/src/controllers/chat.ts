@@ -4,16 +4,19 @@ import { generateAnswer } from '../services/llm.js';
 
 export const chatHandler = async (req: Request, res: Response) => {
     try {
-        const { documentId, question } = req.body;
+        const { documentId, documentIds, question } = req.body;
 
         if (!question) {
             return res.status(400).json({ error: 'Question is required' });
         }
 
-        console.log(`Processing chat for doc: ${documentId}, Question: ${question}`);
+        // Handle both single ID (legacy) and array of IDs
+        const targetIds: string[] = documentIds || (documentId ? [documentId] : []);
 
-        // 1. Retrieve relevant chunks
-        const relevantDocs = await vectorStore.similaritySearch(question, 4); // Top 4 chunks
+        console.log(`Processing chat for docs: ${targetIds.length} target(s)`);
+
+        // 1. Retrieve relevant chunks with filtering
+        const relevantDocs = await vectorStore.similaritySearch(question, 25, targetIds.length > 0 ? targetIds : undefined);
         const context = relevantDocs.map((d: any) => d.pageContent).join('\n\n');
 
         // 2. Generate Answer

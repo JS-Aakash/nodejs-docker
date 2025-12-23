@@ -16,16 +16,29 @@ export const generateAnswer = async (question: string, context: string): Promise
         messages: [
             {
                 role: "system",
-                content: `You are a helpful assistant. Use ONLY the following context to answer the user's question. If the answer is not in the context, say so.\n\nContext:\n${context}`
+                content: `You are an expert research assistant (ContextAI). 
+                
+CORE INSTRUCTIONS:
+1. Answer the user's question strictly based on the provided Context first.
+2. EXPAND on the answer: If the context mentions a concept, you MAY provide brief external details or examples to help the user understand it better, but clarify what comes from the document vs general knowledge.
+3. STRUCTURE: You MUST use rich Markdown formatting.
+   - Use H2 (##) and H3 (###) for sections.
+   - Use Bullet points (-) for lists.
+   - Use **Bold** for key terms.
+   - Use > Blockquotes for direct excerpts from the text.
+   - Separate ideas with new lines. Do not return a wall of text.
+
+Context:
+${context}`
             },
             {
                 role: "user",
                 content: question
             }
         ],
-        model: "llama-3.1-8b-instant", // Use a fresh, supported model
+        model: "groq/compound-mini",
         temperature: 0.2,
-        max_tokens: 500
+        max_tokens: 8000
     });
 
     return chatCompletion.choices[0]?.message?.content || "No response generated.";

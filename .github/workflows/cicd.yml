@@ -7,9 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ------------------------------------------------------------------
   # JOB 1: Deploy Serverless Infrastructure (Lambdas, S3, API Gateway)
-  # ------------------------------------------------------------------
   deploy-serverless:
     runs-on: ubuntu-latest
     steps:
@@ -35,12 +33,11 @@ jobs:
       - name: Deploy Serverless Stack
         run: npx serverless deploy --stage prod --param="EC2_API_URL=${{ secrets.EC2_API_URL }}"
 
-  # ------------------------------------------------------------------
   # JOB 2: Build & Deploy EC2 Worker (Docker -> ECR -> EC2 via SSM)
-  # ------------------------------------------------------------------
+
   deploy-worker:
     runs-on: ubuntu-latest
-    needs: deploy-serverless # Run after serverless to ensure env vars/resources exist
+    needs: deploy-serverless
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -72,12 +69,11 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      # DEPLOY TO EC2 using SSH (Fallback since SSM is not connecting)
       - name: Update EC2 Service via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ubuntu  # Assuming Ubuntu, change to 'ec2-user' if Amazon Linux
+          username: ubuntu 
           key: ${{ secrets.SSH_PRIVATE_KEY_EC2 }}
           script: |
             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}

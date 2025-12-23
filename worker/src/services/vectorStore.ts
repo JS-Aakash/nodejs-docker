@@ -22,21 +22,19 @@ class SimpleVectorStore {
         console.log(`Stored ${contents.length} chunks in memory.`);
     }
 
-    async similaritySearch(query: string, k: number) {
-        // Determine 'similarity' via simple keyword matching for this mock
-        // In real implementation, this would generate embeddings + cosine similarity
-
-        // Naive ranking: count word overlaps
+    async similaritySearch(query: string, k: number, filterIds?: string[]) {
         const queryWords = query.toLowerCase().split(/\s+/);
 
-        const scored = this.docs.map(doc => {
-            let score = 0;
-            const contentLower = doc.content.toLowerCase();
-            queryWords.forEach(word => {
-                if (contentLower.includes(word)) score++;
+        const scored = this.docs
+            .filter(doc => !filterIds || filterIds.includes(doc.metadata.source))
+            .map(doc => {
+                let score = 0;
+                const contentLower = doc.content.toLowerCase();
+                queryWords.forEach(word => {
+                    if (contentLower.includes(word)) score++;
+                });
+                return { doc, score };
             });
-            return { doc, score };
-        });
 
         scored.sort((a, b) => b.score - a.score);
 
