@@ -15,19 +15,19 @@ export const handler = async (
 
     try {
         const body = JSON.parse(event.body || '{}');
-        const { documentId, question } = body;
+        const { documentId, documentIds, question } = body;
 
         // 1. Validation
-        if (!documentId || !question) {
+        if ((!documentId && !documentIds) || !question) {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ message: 'documentId and question are required' }),
+                body: JSON.stringify({ message: 'documentId(s) and question are required' }),
             };
         }
 
         // 2. Forward to EC2 Worker
         const processingEndpoint = `${ec2Url}/chat`;
-        console.log(`Forwarding query for doc ${documentId} to ${processingEndpoint}`);
+        console.log(`Forwarding query to ${processingEndpoint}`);
 
         // Set a timeout for the fetch request itself if needed, 
         // though Lambda timeout handles the hard limit.
@@ -40,7 +40,7 @@ export const handler = async (
                 'Content-Type': 'application/json',
                 'X-Source': 'aws-lambda-proxy'
             },
-            body: JSON.stringify({ documentId, question }),
+            body: JSON.stringify({ documentId, documentIds, question }),
             signal: controller.signal
         });
 
